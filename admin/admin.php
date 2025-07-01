@@ -1,8 +1,79 @@
 <?php
+session_start();
+
 // Include database connection
 require_once '../config/database.php';
 
-// Handle delete action
+// Simple password protection
+$admin_password = 'putangina'; // Change this to your desired password
+
+// Handle login
+if (isset($_POST['login'])) {
+    if ($_POST['password'] === $admin_password) {
+        $_SESSION['admin_logged_in'] = true;
+        header('Location: admin.php');
+        exit;
+    } else {
+        $login_error = "Invalid password. Please try again.";
+    }
+}
+
+// Handle logout
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: admin.php');
+    exit;
+}
+
+// Check if user is logged in
+$is_logged_in = isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
+
+// If not logged in, show login form
+if (!$is_logged_in) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Login - Portfolio</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <link rel="stylesheet" href="assets/styles/style.css">
+    </head>
+    <body>
+        <div class="login-container">
+            <div class="login-header">
+                <h1><i class="fas fa-lock"></i> Admin Login</h1>
+                <p>Enter password to access admin panel</p>
+            </div>
+            
+            <?php if (isset($login_error)): ?>
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i> <?php echo $login_error; ?>
+                </div>
+            <?php endif; ?>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autofocus>
+                </div>
+                <button type="submit" name="login" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            
+            <a href="../index.php" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Portfolio
+            </a>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $id = $_GET['delete'];
     try {
@@ -57,7 +128,6 @@ try {
     <title>Admin Panel - Portfolio Inquiries</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="assets/styles/style.css">
 </head>
 <body>
@@ -66,9 +136,14 @@ try {
             <h1 class="admin-title">
                 <i class="fas fa-cogs"></i> Admin Panel - Portfolio Inquiries
             </h1>
-            <a href="index.php" class="back-link">
-                <i class="fas fa-arrow-left"></i> Back to Portfolio
-            </a>
+            <div class="header-actions">
+                <a href="../index.php" class="back-link">
+                    <i class="fas fa-arrow-left"></i> Back to Portfolio
+                </a>
+                <a href="?logout" class="logout-link" onclick="return confirm('Are you sure you want to logout?')">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
         </div>
     </header>
 
@@ -214,6 +289,7 @@ try {
             </div>
         </div>
     </div>
+
     <script>
         // Modal functionality
         const modal = document.getElementById('inquiry-modal');
